@@ -1,0 +1,121 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+# some metadata about the template itself
+metadata:
+  name: application
+  title: Application 1
+  description: Create a standard application deployment
+spec:
+  owner: backstage/idp-admins
+  type: service
+
+  # these are the steps which are rendered in the frontend with the form input
+  parameters:
+    - title: Name of the application
+      required:
+        - name
+        - description
+        - namespace
+        - lifecycle
+      properties:
+        name:
+          title: Name
+          type: string
+          description: Unique name of the component
+          ui:autofocus: true
+          ui:options:
+            rows: 5
+        description:
+          title: Description
+          type: string
+          description: A longer description of what this application does.
+        lifecycle:
+          title: Lifecycle
+          type: string
+          enum:
+            - production
+            - experimental
+          
+        namespace:
+          title: Namespace
+          type: string
+          description: Kubernetes namespace where the application will be deployed
+    - title: Choose a location
+      required:
+        - repoUrl
+      properties:
+        repoUrl:
+          title: Repository Location
+          type: string
+          ui:field: RepoUrlPicker
+          ui:options:
+            allowedHosts:
+              - github.com
+
+  # here's the steps that are executed in series in the scaffolder backend
+  steps:
+    - id: fetch-base
+      name: Fetch Base
+      action: fetch:template
+      input:
+        url: ./skeleton
+        values:
+          name: ${{ parameters.name }}
+          description: ${{ parameters.description }}
+          lifecycle: ${{ parameters.lifecycle }}
+          namespace: ${{ parameters.namespace }}
+          replicas: ${{ parameters.replicas }}
+
+    - id: publish
+      name: Publish
+      action: publish:github
+      input:
+        allowedHosts: ['github.com']
+        description: This is ${{ parameters.name }}
+        repoUrl: ${{ parameters.repoUrl }}
+        repoVisibility: public
+        defaultBranch: main
+
+    - id: argocd
+      name: Create New Application in Argo CD
+      action: http:backstage:request
+      input:
+        method: 'POST'
+        path: '/proxy/argocd/api/applications'
+        headers:
+          content-type: 'application/json'
+        body:
+          metadata:
+            name: ${{ parameters.name }}
+            namespace: argocd
+          spec:
+            project: default
+            source:
+              # (7)
+              repoURL: https://github.com/jppol-idp/${{ parameters.name }}.git
+              targetRevision: main
+              path: helm/
+            destination:
+              server: https://kubernetes.default.svc
+              namespace: ${{ parameters.namespace }}
+            syncPolicy:
+              automated:
+                prune: true
+                selfHeal: true
+              syncOptions:
+                - CreateNamespace=true
+
+    - id: register
+      name: Register
+      action: catalog:register
+      input:
+        repoContentsUrl: ${{ steps['publish'].output.repoContentsUrl }}
+        catalogInfoPath: '/backstage/catalog-info.yaml'
+
+  output:
+    links:
+      - title: Open the Source Code Repository
+        url: ${{ steps.publish.output.remoteUrl }}
+      - title: Open the Catalog Info Component
+        icon: catalog
+        entityRef: ${{ steps.register.output.entityRef }}

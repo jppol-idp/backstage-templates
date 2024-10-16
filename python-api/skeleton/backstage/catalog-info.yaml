@@ -1,0 +1,51 @@
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: ${{ values.name }}
+  description: ${{ values.name }} API
+  annotations:
+    argocd/app-name: api-imdb
+    # grafana/overview-dashboard: "https://grafana.jppol.click/goto/Hw7n7PzHR?orgId=1"
+    # grafana/dashboard-selector: nginx
+    backstage.io/kubernetes-namespace: ${{ values.name | dump }}
+    backstage.io/kubernetes-label-selector: 'app.kubernetes.io/name=${{ values.name }}'
+    #prometheus.io/rule: sum by (ingress) (nginx_ingress_controller_requests{ingress!=""}), nginx_ingress_controller_nginx_process_resident_memory_bytes
+    kubecost.com/deployment-name: ${{ values.name | dump }}
+  links:
+    - url: https://api-imdb.jppol.click/docs
+      title: Documentation
+      icon: documentation
+    - url: https://grafana.jppol.click/goto/JCdVqlzHg?orgId=1
+      title: Grafana loki Access log explorer
+      icon: grafana
+spec:
+  type: openapi
+  owner: idp-admins
+  lifecycle: experimental
+  definition: |
+    // Template. please replace
+
+    syntax = "proto3";
+
+    option java_multiple_files = true;
+    option java_package = "io.grpc.examples.helloworld";
+    option java_outer_classname = "HelloWorldProto";
+    option objc_class_prefix = "HLW";
+
+    package helloworld;
+
+    // The greeting service definition.
+    service Greeter {
+      // Sends a greeting
+      rpc SayHello (HelloRequest) returns (HelloReply) {}
+    }
+
+    // The request message containing the user's name.
+    message HelloRequest {
+      string name = 1;
+    }
+
+    // The response message containing the greetings
+    message HelloReply {
+      string message = 1;
+    }
