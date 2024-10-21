@@ -9,7 +9,7 @@ metadata:
     grafana/overview-dashboard: "https://grafana.jppol.click/goto/Hw7n7PzHR?orgId=1"
     grafana/dashboard-selector: ${{ values.name }}
     backstage.io/kubernetes-namespace: ${{ values.namespace }}
-    backstage.io/kubernetes-label-selector: 'app.kubernetes.io/instance=${{ values.name }}'
+    backstage.io/kubernetes-label-selector: "app.kubernetes.io/instance=${{ values.name }}"
     prometheus.io/rule: container_memory_usage_bytes{pod=~"${{ values.name }}-.*"}|pod,rate(container_cpu_usage_seconds_total{pod=~"${{ values.name }}-.*"}[5m])|pod
     kubecost.com/deployment-name: ${{ values.name | dump }}
   links:
@@ -21,5 +21,5 @@ metadata:
       icon: grafana
 spec:
   type: service
-  owner: idp-admins
+  owner: ${{ values.owner }}
   lifecycle: ${{ values.lifecycle }}

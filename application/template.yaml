@@ -17,6 +17,7 @@ spec:
         - description
         - namespace
         - lifecycle
+        - owner
       properties:
         name:
           title: Name
@@ -35,7 +36,14 @@ spec:
           enum:
             - production
             - experimental
-          
+        owner:
+          title: Owner
+          type: string
+          description: Owner of the component
+          ui:field: OwnerPicker
+          ui:options:
+            catalogFilter:
+              kind: Group
         namespace:
           title: Namespace
           type: string
@@ -65,12 +73,13 @@ spec:
           lifecycle: ${{ parameters.lifecycle }}
           namespace: ${{ parameters.namespace }}
           replicas: ${{ parameters.replicas }}
+          owner: ${{ parameters.owner }}
 
     - id: publish
       name: Publish
       action: publish:github
       input:
-        allowedHosts: ['github.com']
+        allowedHosts: ["github.com"]
         description: This is ${{ parameters.name }}
         repoUrl: ${{ parameters.repoUrl }}
         repoVisibility: public
@@ -80,10 +89,10 @@ spec:
       name: Create New Application in Argo CD
       action: http:backstage:request
       input:
-        method: 'POST'
-        path: '/proxy/argocd/api/applications'
+        method: "POST"
+        path: "/proxy/argocd/api/applications"
         headers:
-          content-type: 'application/json'
+          content-type: "application/json"
         body:
           metadata:
             name: ${{ parameters.name }}
@@ -110,7 +119,7 @@ spec:
       action: catalog:register
       input:
         repoContentsUrl: ${{ steps['publish'].output.repoContentsUrl }}
-        catalogInfoPath: '/backstage/catalog-info.yaml'
+        catalogInfoPath: "/backstage/catalog-info.yaml"
 
   output:
     links:
