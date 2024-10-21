@@ -6,7 +6,7 @@ metadata:
   title: Application 1
   description: Create a standard application deployment
 spec:
-  owner: backstage/idp-admins
+  owner: backstage-idp-admins
   type: service
 
   # these are the steps which are rendered in the frontend with the form input
